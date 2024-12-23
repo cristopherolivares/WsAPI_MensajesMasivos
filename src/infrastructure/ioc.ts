@@ -16,7 +16,7 @@ const container = new ContainerBuilder();
 /**
  * Inicamos servicio de WS / Bot / Twilio
  */
-container.register("ws.transporter", BaileysTransporter);
+container.register("ws.transporter", WsTransporter);
 const wsTransporter = container.get("ws.transporter");
 
 container.register("db.repository", MockRepository);

@@ -11,3 +11,4 @@ export class Lead {
     this.phone = phone;
   }
 }
+ 
