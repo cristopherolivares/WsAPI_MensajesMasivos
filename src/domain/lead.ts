@@ -4,11 +4,14 @@ export class Lead {
   readonly uuid: string;
   readonly message: string;
   readonly phone: string;
+  readonly image?: string;
 
-  constructor({ message, phone }: { message: string; phone: string }) {
+  constructor({ message, phone, image }: { message: string; phone: string; image?: string }) {
     this.uuid = uuid();
     this.message = message;
     this.phone = phone;
+    this.image = image;
   }
 }
+
  

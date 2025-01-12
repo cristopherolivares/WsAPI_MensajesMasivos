@@ -13,16 +13,18 @@ export class LeadCreate {
   public async sendMessageAndSave({
     message,
     phones,
+    image,
   }: {
     message: string;
     phones: string[];
+    image?: string; // URL o base64 de la imagen
   }) {
     const responsesDbSave = [];
     const responsesExSave = [];
   
     for (const phone of phones) {
-      const responseDbSave = await this.leadRepository.save({ message, phone });
-      const responseExSave = await this.leadExternal.sendMsg({ message, phone });
+      const responseDbSave = await this.leadRepository.save({ message, phone, image });
+      const responseExSave = await this.leadExternal.sendMsg({ message, phone, image });
   
       responsesDbSave.push(responseDbSave);
       responsesExSave.push(responseExSave);
@@ -30,4 +32,5 @@ export class LeadCreate {
   
     return { responsesDbSave, responsesExSave };
   }
+  
 }  

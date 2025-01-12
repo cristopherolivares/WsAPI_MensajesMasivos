@@ -46,21 +46,26 @@ class MySQLRepository implements LeadRepository {
   }
 
   // Guardar un nuevo lead en la base de datos
-  async save({ message, phone }: { message: string, phone: string }): Promise<Lead> {
+  async save({
+    message,
+    phone,
+    image,
+  }: {
+    message: string;
+    phone: string;
+    image?: string;
+  }): Promise<Lead> {
     await this.connect();
-
-    // Insertar un nuevo registro en la tabla leads
+  
     const [result] = await this.db.execute<mysql.ResultSetHeader>(
-      'INSERT INTO leads (message, phone) VALUES (?, ?)',
-      [message, phone]
+      'INSERT INTO leads (message, phone, image) VALUES (?, ?, ?)',
+      [message, phone, image || null]
     );
-
-    // El `insertId` está disponible en ResultSetHeader
+  
     const uuid = result.insertId.toString();
-
-    // Retornar el objeto Lead con los datos insertados
-    return new Lead({ message, phone });
+    return new Lead({ message, phone, image });
   }
+  
 
   // Obtener los detalles de un lead por su id
   async getDetail(id: string): Promise<Lead | null | undefined> {

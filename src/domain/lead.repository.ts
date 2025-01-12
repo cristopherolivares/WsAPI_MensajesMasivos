@@ -8,9 +8,12 @@ export default interface LeadRepository {
   save({
     message,
     phone,
+    image,
   }: {
     message: string;
     phone: string;
+    image?: string;
   }): Promise<Lead | undefined | null>;
+  
   getDetail(id:string):Promise<Lead | null | undefined>
 }
