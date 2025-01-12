@@ -12,13 +12,22 @@ export class LeadCreate {
 
   public async sendMessageAndSave({
     message,
-    phone,
+    phones,
   }: {
     message: string;
-    phone: string;
+    phones: string[];
   }) {
-    const responseDbSave = await this.leadRepository.save({ message, phone });//TODO DB
-    const responseExSave = await this.leadExternal.sendMsg({ message, phone });//TODO enviar a ws
-    return {responseDbSave, responseExSave};
+    const responsesDbSave = [];
+    const responsesExSave = [];
+  
+    for (const phone of phones) {
+      const responseDbSave = await this.leadRepository.save({ message, phone });
+      const responseExSave = await this.leadExternal.sendMsg({ message, phone });
+  
+      responsesDbSave.push(responseDbSave);
+      responsesExSave.push(responseExSave);
+    }
+  
+    return { responsesDbSave, responsesExSave };
   }
-}
+}  
