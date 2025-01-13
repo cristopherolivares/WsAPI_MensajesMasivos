@@ -52,24 +52,27 @@ class WsTransporter extends Client implements LeadExternal {
     message,
     phone,
     image,
+    document,
   }: {
     message: string;
     phone: string;
-    image?: string; // Ruta local o URL/Base64
+    image?: string; // Imagen en Base64 o ruta
+    document?: string; // Documento en Base64 o ruta
   }): Promise<any> {
     try {
       if (!this.status) return Promise.resolve({ error: "WAIT_LOGIN" });
   
-      if (image) {
-        let media: MessageMedia;
+      let media: MessageMedia | undefined;
   
+      // Procesar imagen si se proporciona
+      if (image) {
         if (existsSync(image)) {
-          // Si la imagen es un archivo local, leerla y convertirla
-          const mimeType = this.getMimeType(image); // Función para obtener el tipo MIME
+          // Imagen como archivo local
+          const mimeType = this.getMimeType(image);
           const base64Image = readFileSync(image).toString("base64");
           media = new MessageMedia(mimeType, base64Image, path.basename(image));
         } else if (image.startsWith("data:") || image.startsWith("http")) {
-          // Si la imagen es Base64 o una URL
+          // Imagen como Base64 o URL
           media = image.startsWith("http")
             ? await MessageMedia.fromUrl(image)
             : new MessageMedia(
@@ -77,17 +80,35 @@ class WsTransporter extends Client implements LeadExternal {
                 image.split(",")[1], // Base64 puro
                 "image" // Nombre genérico
               );
-        } else {
-          return Promise.resolve({ error: "INVALID_IMAGE_PATH" });
         }
+      }
   
-        // Enviar la imagen con un mensaje opcional como pie de foto
+      // Procesar documento si se proporciona
+      if (document) {
+        if (existsSync(document)) {
+          // Documento como archivo local
+          const mimeType = this.getMimeType(document);
+          const base64Doc = readFileSync(document).toString("base64");
+          media = new MessageMedia(mimeType, base64Doc, path.basename(document));
+        } else if (document.startsWith("data:")) {
+          // Documento como Base64
+          media = new MessageMedia(
+            document.split(";")[0].split(":")[1], // MIME
+            document.split(",")[1], // Base64 puro
+            "document" // Nombre genérico
+          );
+        } else {
+          return Promise.resolve({ error: "INVALID_DOCUMENT_PATH" });
+        }
+      }
+  
+      // Enviar el archivo o mensaje
+      if (media) {
         const response = await this.sendMessage(`${phone}@c.us`, media, {
           caption: message,
         });
         return { id: response.id.id };
       } else {
-        // Si no hay imagen, solo envía el mensaje
         const response = await this.sendMessage(`${phone}@c.us`, message);
         return { id: response.id.id };
       }
@@ -96,7 +117,7 @@ class WsTransporter extends Client implements LeadExternal {
     }
   }
   
-  // Obtener el tipo MIME del archivo basado en su extensión
+  // Obtener tipo MIME para imágenes y documentos
   private getMimeType(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();
     switch (ext) {
@@ -107,10 +128,16 @@ class WsTransporter extends Client implements LeadExternal {
         return "image/jpeg";
       case ".gif":
         return "image/gif";
+      case ".pdf":
+        return "application/pdf";
+      case ".doc":
+      case ".docx":
+        return "application/msword";
       default:
-        throw new Error("Unsupported image format");
+        throw new Error("Unsupported file format");
     }
   }
+  
   
 
   
