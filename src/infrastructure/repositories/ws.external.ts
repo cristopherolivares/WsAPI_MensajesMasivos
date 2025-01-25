@@ -118,30 +118,36 @@ class WsTransporter extends Client implements LeadExternal {
   }
   
   // Obtener tipo MIME para imágenes y documentos
+  // private getMimeType(filePath: string): string {
+  //   const ext = path.extname(filePath).toLowerCase();
+  //   switch (ext) {
+  //     case ".png":
+  //       return "image/png";
+  //     case ".jpg":
+  //     case ".jpeg":
+  //       return "image/jpeg";
+  //     case ".gif":
+  //       return "image/gif";
+  //     case ".pdf":
+  //       return "application/pdf";
+  //     case ".doc":
+  //     case ".docx":
+  //       return "application/msword";
+  //     default:
+  //       throw new Error("Unsupported file format");
+  //   }
+  // }
+  
   private getMimeType(filePath: string): string {
-    const ext = path.extname(filePath).toLowerCase();
-    switch (ext) {
-      case ".png":
-        return "image/png";
-      case ".jpg":
-      case ".jpeg":
-        return "image/jpeg";
-      case ".gif":
-        return "image/gif";
-      case ".pdf":
-        return "application/pdf";
-      case ".doc":
-      case ".docx":
-        return "application/msword";
-      default:
-        throw new Error("Unsupported file format");
+    const mime = require("mime-types");
+    const mimeType = mime.lookup(filePath);
+    if (!mimeType) {
+      throw new Error("Unsupported file format");
     }
+    return mimeType;
   }
   
   
-
-  
-
   getStatus(): boolean {
     return this.status;
   }
