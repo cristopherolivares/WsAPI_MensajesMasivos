@@ -6,30 +6,45 @@ import fs from "fs";
 class LeadCtrl {
   constructor(private readonly leadCreator: LeadCreate) {}
 
-  public sendCtrl = async ({ body, file }: Request, res: Response) => {
-    const { message, phones, image } = body;
-
-    // Validar si hay un archivo CSV o una lista de números en el body
+  public sendCtrl = async (req: Request, res: Response) => {
+    const { message } = req.body;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  
+    if (!files) {
+      return res.status(400).send({ error: "No se enviaron archivos" });
+    }
+  
     let phoneNumbers: string[] = [];
-
-    if (file) {
-      // Procesar archivo CSV
+    let imagePath: string | undefined;
+  
+    // Procesar archivo CSV
+    if (files.file && files.file.length > 0) {
       try {
-        const filePath = file.path;
+        const filePath = files.file[0].path; // Ruta del CSV
         phoneNumbers = await this.parseCsv(filePath);
-        fs.unlinkSync(filePath); // Eliminar el archivo temporal después de leerlo
+        // No elimines el archivo aquí si necesitas conservarlo
       } catch (err) {
         return res.status(400).send({ error: "Error al procesar el archivo CSV" });
       }
-    } else if (Array.isArray(phones) && phones.length > 0) {
-      phoneNumbers = phones;
-    } else {
-      return res.status(400).send({ error: "Se debe proporcionar un archivo CSV o una lista de números" });
     }
-
-    const response = await this.leadCreator.sendMessageAndSave({ message, phones: phoneNumbers, image });
+  
+    // Procesar imagen
+    if (files.image && files.image.length > 0) {
+      imagePath = files.image[0].path; // Ruta de la imagen
+    }
+  
+    if (phoneNumbers.length === 0) {
+      return res.status(400).send({ error: "No se encontraron números de teléfono en el archivo CSV" });
+    }
+  
+    const response = await this.leadCreator.sendMessageAndSave({
+      message,
+      phones: phoneNumbers,
+      image: imagePath,
+    });
     res.send(response);
   };
+  
 
   private parseCsv(filePath: string): Promise<string[]> {
     return new Promise((resolve, reject) => {
@@ -46,4 +61,5 @@ class LeadCtrl {
 }
 
 export default LeadCtrl;
+
 
