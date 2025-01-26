@@ -23,11 +23,13 @@ router.post(
   "/",
   upload.fields([
     { name: "file", maxCount: 1 }, // Archivo CSV
+    { name: "message", maxCount: 1 }, // Archivo TXT de mensajes
     { name: "image", maxCount: 1 }, // Imagen adjunta
   ]),
   leadCtrl.sendCtrl
 );
 
 export { router };
+
 
 
