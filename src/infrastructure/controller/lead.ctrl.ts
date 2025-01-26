@@ -17,34 +17,51 @@ class LeadCtrl {
     let phoneNumbers: string[] = [];
     let imagePath: string | undefined;
   
-    // Procesar archivo CSV
-    if (files.file && files.file.length > 0) {
-      try {
-        const filePath = files.file[0].path; // Ruta del CSV
+    try {
+      // Procesar archivo CSV
+      if (files.file && files.file.length > 0) {
+        const filePath = files.file[0].path;
         phoneNumbers = await this.parseCsv(filePath);
-        // No elimines el archivo aquí si necesitas conservarlo
-      } catch (err) {
-        return res.status(400).send({ error: "Error al procesar el archivo CSV" });
+        this.deleteFile(filePath); // Eliminar archivo CSV después de procesarlo
       }
-    }
   
-    // Procesar imagen
-    if (files.image && files.image.length > 0) {
-      imagePath = files.image[0].path; // Ruta de la imagen
-    }
+      // Procesar imagen
+      if (files.image && files.image.length > 0) {
+        imagePath = files.image[0].path;
+      }
   
-    if (phoneNumbers.length === 0) {
-      return res.status(400).send({ error: "No se encontraron números de teléfono en el archivo CSV" });
-    }
+      if (phoneNumbers.length === 0) {
+        return res.status(400).send({ error: "No se encontraron números de teléfono en el archivo CSV" });
+      }
   
-    const response = await this.leadCreator.sendMessageAndSave({
-      message,
-      phones: phoneNumbers,
-      image: imagePath,
-    });
-    res.send(response);
+      // Enviar mensajes
+      const response = await this.leadCreator.sendMessageAndSave({
+        message,
+        phones: phoneNumbers,
+        image: imagePath,
+      });
+  
+      // Después de enviar los mensajes, eliminar la imagen si fue cargada
+      if (imagePath) {
+        this.deleteFile(imagePath);
+      }
+  
+      return res.send(response);
+    } catch (err) {
+      return res.status(500).send({ error: "Error procesando archivos" });
+    }
   };
   
+  // Método para eliminar archivos
+  private deleteFile(filePath: string): void {
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error(`Error eliminando archivo: ${filePath}`, err);
+      } else {
+        console.log(`Archivo eliminado: ${filePath}`);
+      }
+    });
+  }
 
   private parseCsv(filePath: string): Promise<string[]> {
     return new Promise((resolve, reject) => {
