@@ -6,14 +6,11 @@ import container from "../ioc";
 
 const router: Router = Router();
 
-// Configurar almacenamiento personalizado con Multer
+// Configurar Multer para mantener el nombre original
 const storage = multer.diskStorage({
   destination: "uploads/", // Carpeta de destino
   filename: (req, file, cb) => {
-    // Generar un nombre único manteniendo la extensión del archivo
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const extension = path.extname(file.originalname); // Obtener extensión del archivo
-    cb(null, `${uniqueSuffix}${extension}`); // Guardar con nombre único y extensión
+    cb(null, file.originalname); // Usar el nombre original del archivo
   },
 });
 
@@ -32,4 +29,5 @@ router.post(
 );
 
 export { router };
+
 
