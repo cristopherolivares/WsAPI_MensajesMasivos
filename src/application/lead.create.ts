@@ -15,7 +15,7 @@ export class LeadCreate {
     phones,
     image,
   }: {
-    message: string;
+    message?: string; // Cambiado a opcional
     phones: string[];
     image?: string; // URL o base64 de la imagen
   }) {
@@ -23,8 +23,27 @@ export class LeadCreate {
     const responsesExSave = [];
   
     for (const phone of phones) {
-      const responseDbSave = await this.leadRepository.save({ message, phone, image });
-      const responseExSave = await this.leadExternal.sendMsg({ message, phone, image });
+      // Si 'message' es undefined, asigna una cadena vacía u otro valor predeterminado
+      const safeMessage = message ?? '';
+  
+      // Guarda en la base de datos (puede incluir mensaje vacío)
+      const responseDbSave = await this.leadRepository.save({ 
+        message: safeMessage, 
+        phone, 
+        image 
+      });
+  
+      // Envía el mensaje si existe un texto o una imagen
+      let responseExSave;
+      if (message || image) {
+        responseExSave = await this.leadExternal.sendMsg({ 
+          message: safeMessage, 
+          phone, 
+          image 
+        });
+      } else {
+        responseExSave = { error: "Neither message nor image provided" };
+      }
   
       responsesDbSave.push(responseDbSave);
       responsesExSave.push(responseExSave);
@@ -32,5 +51,7 @@ export class LeadCreate {
   
     return { responsesDbSave, responsesExSave };
   }
+  
+  
   
 }  

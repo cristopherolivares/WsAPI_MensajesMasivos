@@ -26,36 +26,33 @@ class LeadCtrl {
         this.deleteFile(filePath); // Eliminar archivo CSV después de procesarlo
       }
   
-      // Procesar archivo TXT de mensajes
+      // Procesar archivo TXT de mensajes (si existe)
       if (files.message && files.message.length > 0) {
         const messagePath = files.message[0].path;
         const messageContent = this.parseTxt(messagePath); // Leer contenido completo
         this.deleteFile(messagePath); // Eliminar archivo TXT después de procesarlo
         messages.push(messageContent); // Agregar el contenido completo como un único mensaje
       }
-      
-      if (messages.length === 0 || !messages[0]) {
-        return res.status(400).send({ error: "No se encontró un mensaje en el archivo TXT" });
-      }
   
-      // Procesar imagen
+      // Procesar imagen (si existe)
       if (files.image && files.image.length > 0) {
         imagePath = files.image[0].path;
       }
   
+      // Validación básica
       if (phoneNumbers.length === 0) {
         return res.status(400).send({ error: "No se encontraron números de teléfono en el archivo CSV" });
       }
   
-      if (messages.length === 0) {
-        return res.status(400).send({ error: "No se encontraron mensajes en el archivo TXT" });
+      if (!messages[0] && !imagePath) {
+        return res.status(400).send({ error: "No se encontró mensaje ni imagen para enviar" });
       }
   
-      // Enviar mensajes a todos los números
+      // Enviar mensajes y/o imágenes a todos los números
       const response = await this.leadCreator.sendMessageAndSave({
-        message: messages[0], // Usar el único mensaje procesado
+        message: messages[0], // Puede ser undefined si no hay mensaje
         phones: phoneNumbers,
-        image: imagePath,
+        image: imagePath, // Puede ser undefined si no hay imagen
       });
   
       // Después de enviar los mensajes, eliminar la imagen si fue cargada
@@ -65,7 +62,6 @@ class LeadCtrl {
   
       return res.send({ response });
     } catch (err) {
-      // Narrow down the type of 'err'
       if (err instanceof Error) {
         return res.status(500).send({ error: "Error procesando archivos", details: err.message });
       } else {
@@ -73,6 +69,7 @@ class LeadCtrl {
       }
     }
   };
+  
   
 
   // Método para eliminar archivos

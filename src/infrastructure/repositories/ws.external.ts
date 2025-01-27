@@ -54,7 +54,7 @@ class WsTransporter extends Client implements LeadExternal {
     image,
     document,
   }: {
-    message: string;
+    message?: string; // Mensaje opcional
     phone: string;
     image?: string; // Imagen en Base64 o ruta
     document?: string; // Documento en Base64 o ruta
@@ -67,55 +67,37 @@ class WsTransporter extends Client implements LeadExternal {
       // Procesar imagen si se proporciona
       if (image) {
         if (existsSync(image)) {
-          // Imagen como archivo local
           const mimeType = this.getMimeType(image);
           const base64Image = readFileSync(image).toString("base64");
           media = new MessageMedia(mimeType, base64Image, path.basename(image));
         } else if (image.startsWith("data:") || image.startsWith("http")) {
-          // Imagen como Base64 o URL
           media = image.startsWith("http")
             ? await MessageMedia.fromUrl(image)
             : new MessageMedia(
-                image.split(";")[0].split(":")[1], // Obtener el MIME
-                image.split(",")[1], // Base64 puro
-                "image" // Nombre genérico
+                image.split(";")[0].split(":")[1],
+                image.split(",")[1],
+                "image"
               );
-        }
-      }
-  
-      // Procesar documento si se proporciona
-      if (document) {
-        if (existsSync(document)) {
-          // Documento como archivo local
-          const mimeType = this.getMimeType(document);
-          const base64Doc = readFileSync(document).toString("base64");
-          media = new MessageMedia(mimeType, base64Doc, path.basename(document));
-        } else if (document.startsWith("data:")) {
-          // Documento como Base64
-          media = new MessageMedia(
-            document.split(";")[0].split(":")[1], // MIME
-            document.split(",")[1], // Base64 puro
-            "document" // Nombre genérico
-          );
-        } else {
-          return Promise.resolve({ error: "INVALID_DOCUMENT_PATH" });
         }
       }
   
       // Enviar el archivo o mensaje
       if (media) {
         const response = await this.sendMessage(`${phone}@c.us`, media, {
-          caption: message,
+          caption: message || "", // Texto opcional
         });
         return { id: response.id.id };
-      } else {
+      } else if (message) {
         const response = await this.sendMessage(`${phone}@c.us`, message);
         return { id: response.id.id };
+      } else {
+        return Promise.resolve({ error: "No content to send" });
       }
     } catch (e: any) {
       return Promise.resolve({ error: e.message });
     }
   }
+  
   
   // Obtener tipo MIME para imágenes y documentos
   // private getMimeType(filePath: string): string {
