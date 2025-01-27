@@ -29,8 +29,13 @@ class LeadCtrl {
       // Procesar archivo TXT de mensajes
       if (files.message && files.message.length > 0) {
         const messagePath = files.message[0].path;
-        messages = this.parseTxt(messagePath);
+        const messageContent = this.parseTxt(messagePath); // Leer contenido completo
         this.deleteFile(messagePath); // Eliminar archivo TXT después de procesarlo
+        messages.push(messageContent); // Agregar el contenido completo como un único mensaje
+      }
+      
+      if (messages.length === 0 || !messages[0]) {
+        return res.status(400).send({ error: "No se encontró un mensaje en el archivo TXT" });
       }
   
       // Procesar imagen
@@ -47,22 +52,18 @@ class LeadCtrl {
       }
   
       // Enviar mensajes a todos los números
-      const responses = [];
-      for (const message of messages) {
-        const response = await this.leadCreator.sendMessageAndSave({
-          message,
-          phones: phoneNumbers,
-          image: imagePath,
-        });
-        responses.push(response);
-      }
+      const response = await this.leadCreator.sendMessageAndSave({
+        message: messages[0], // Usar el único mensaje procesado
+        phones: phoneNumbers,
+        image: imagePath,
+      });
   
       // Después de enviar los mensajes, eliminar la imagen si fue cargada
       if (imagePath) {
         this.deleteFile(imagePath);
       }
   
-      return res.send({ responses });
+      return res.send({ response });
     } catch (err) {
       // Narrow down the type of 'err'
       if (err instanceof Error) {
@@ -100,14 +101,13 @@ class LeadCtrl {
   }
 
   // Método para procesar archivo TXT
-  private parseTxt(filePath: string): string[] {
+  private parseTxt(filePath: string): string {
     try {
-      const fileContent = fs.readFileSync(filePath, "utf-8");
-      const messages = fileContent.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
-      return messages;
+      const fileContent = fs.readFileSync(filePath, "utf-8").trim();
+      return fileContent; // Retorna el contenido completo como un solo mensaje
     } catch (error) {
       console.error("Error leyendo el archivo TXT:", error);
-      return [];
+      return "";
     }
   }
 }

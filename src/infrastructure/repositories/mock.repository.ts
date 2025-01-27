@@ -22,6 +22,8 @@
 import mysql from 'mysql2/promise';
 import { Lead } from "../../domain/lead";
 import LeadRepository from "../../domain/lead.repository";
+import * as path from 'path'; // Import the path module
+import * as fs from 'fs';
 
 // Configuración de la base de datos
 const dbConfig = {
@@ -46,6 +48,7 @@ class MySQLRepository implements LeadRepository {
   }
 
   // Guardar un nuevo lead en la base de datos
+  
   async save({
     message,
     phone,
@@ -65,7 +68,6 @@ class MySQLRepository implements LeadRepository {
     const uuid = result.insertId.toString();
     return new Lead({ message, phone, image });
   }
-  
 
   // Obtener los detalles de un lead por su id
   async getDetail(id: string): Promise<Lead | null | undefined> {
