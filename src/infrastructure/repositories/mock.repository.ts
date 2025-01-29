@@ -27,10 +27,10 @@ import * as fs from 'fs';
 
 // Configuración de la base de datos
 const dbConfig = {
-  host: '149.50.134.51',       // Cambia según la configuración de tu base de datos
-  user: 'nombre',            // Cambia por tu usuario de MySQL
-  password: '123456',            // Cambia por tu contraseña de MySQL
-  database: 'whats',    // Cambia por el nombre de tu base de datos
+  host: process.env.DB_HOST,       // Cambiado a usar variables de entorno
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 };
 
 class MySQLRepository implements LeadRepository {
