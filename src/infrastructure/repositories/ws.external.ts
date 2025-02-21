@@ -15,6 +15,18 @@ class WsTransporter extends Client implements LeadExternal {
     super({
       authStrategy: new LocalAuth(),
       puppeteer: {
+        // Descomentar estas lineas para el envio de videos segun el SO
+        // En caso de no enviar videos pueden estar comentadas
+        // Ruta específica para Google Chrome:
+        //Windows 
+        executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", 
+        
+        //MaOS
+        //executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        
+        //Linux
+        //executablePath: "/usr/bin/google-chrome",
+        
         headless: true,
         args: [
           "--disable-setuid-sandbox",
